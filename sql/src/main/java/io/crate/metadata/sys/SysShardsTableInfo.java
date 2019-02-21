@@ -224,6 +224,20 @@ public class SysShardsTableInfo extends StaticTableInfo {
         Columns.PARTITION_IDENT
     );
 
+    private static final ObjectType TYPE_RECOVERY_SIZE = ObjectType.builder()
+        .setInnerType(Columns.RECOVERY_SIZE_USED.name(), LongType.INSTANCE)
+        .setInnerType(Columns.RECOVERY_SIZE_REUSED.name(), LongType.INSTANCE)
+        .setInnerType(Columns.RECOVERY_SIZE_RECOVERED.name(), LongType.INSTANCE)
+        .setInnerType(Columns.RECOVERY_SIZE_PERCENT.name(), FloatType.INSTANCE)
+        .build();
+
+    private static final ObjectType TYPE_RECOVERY_FILES = ObjectType.builder()
+        .setInnerType(Columns.RECOVERY_FILES_USED.name(), IntegerType.INSTANCE)
+        .setInnerType(Columns.RECOVERY_FILES_REUSED.name(), IntegerType.INSTANCE)
+        .setInnerType(Columns.RECOVERY_FILES_RECOVERED.name(), IntegerType.INSTANCE)
+        .setInnerType(Columns.RECOVERY_FILES_PERCENT.name(), FloatType.INSTANCE)
+        .build();
+
     SysShardsTableInfo() {
         super(IDENT, new ColumnRegistrar(IDENT, RowGranularity.SHARD)
                 .register(Columns.SCHEMA_NAME, StringType.INSTANCE)
@@ -238,22 +252,30 @@ public class SysShardsTableInfo extends StaticTableInfo {
                 .register(Columns.ROUTING_STATE, StringType.INSTANCE)
                 .register(Columns.ORPHAN_PARTITION, BooleanType.INSTANCE)
 
-                .register(Columns.RECOVERY, ObjectType.INSTANCE)
+                .register(Columns.RECOVERY, ObjectType.builder()
+                    .setInnerType(Columns.RECOVERY_STAGE.name(), StringType.INSTANCE)
+                    .setInnerType(Columns.RECOVERY_TYPE.name(), StringType.INSTANCE)
+                    .setInnerType(Columns.RECOVERY_TOTAL_TIME.name(), LongType.INSTANCE)
+                    .setInnerType(Columns.RECOVERY_SIZE.name(), TYPE_RECOVERY_SIZE)
+                    .setInnerType(Columns.RECOVERY_FILES.name(), TYPE_RECOVERY_FILES)
+                    .build())
+
                 .register(Columns.RECOVERY_STAGE, StringType.INSTANCE)
                 .register(Columns.RECOVERY_TYPE, StringType.INSTANCE)
                 .register(Columns.RECOVERY_TOTAL_TIME, LongType.INSTANCE)
 
-                .register(Columns.RECOVERY_SIZE, ObjectType.INSTANCE)
+                .register(Columns.RECOVERY_SIZE, TYPE_RECOVERY_SIZE)
                 .register(Columns.RECOVERY_SIZE_USED, LongType.INSTANCE)
                 .register(Columns.RECOVERY_SIZE_REUSED, LongType.INSTANCE)
                 .register(Columns.RECOVERY_SIZE_RECOVERED, LongType.INSTANCE)
                 .register(Columns.RECOVERY_SIZE_PERCENT, FloatType.INSTANCE)
 
-                .register(Columns.RECOVERY_FILES, ObjectType.INSTANCE)
+                .register(Columns.RECOVERY_FILES, TYPE_RECOVERY_FILES)
                 .register(Columns.RECOVERY_FILES_USED, IntegerType.INSTANCE)
                 .register(Columns.RECOVERY_FILES_REUSED, IntegerType.INSTANCE)
                 .register(Columns.RECOVERY_FILES_RECOVERED, IntegerType.INSTANCE)
                 .register(Columns.RECOVERY_FILES_PERCENT, FloatType.INSTANCE)
+
                 .register(Columns.PATH, DataTypes.STRING)
                 .register(Columns.BLOB_PATH, DataTypes.STRING)
 

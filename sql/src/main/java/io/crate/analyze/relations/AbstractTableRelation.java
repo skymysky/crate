@@ -30,6 +30,7 @@ import io.crate.sql.tree.QualifiedName;
 import io.crate.types.ArrayType;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
+import io.crate.types.ObjectType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,7 +46,7 @@ public abstract class AbstractTableRelation<T extends TableInfo> implements Anal
     private static final Predicate<Reference> IS_OBJECT_ARRAY =
         input -> input != null
         && input.valueType().id() == ArrayType.ID
-        && ((ArrayType) input.valueType()).innerType().equals(DataTypes.OBJECT);
+        && ((ArrayType) input.valueType()).innerType().id() == ObjectType.ID;
 
     protected T tableInfo;
     private List<Field> outputs;
@@ -126,6 +127,19 @@ public abstract class AbstractTableRelation<T extends TableInfo> implements Anal
         return new Field(this, path, reference.valueType());
     }
 
+    void allocatePossibleObjectInnerFields(String rootName, List<String> path, DataType dataType) {
+        if (dataType.id() == ObjectType.ID) {
+            Map<String, DataType> innerTypes = ((ObjectType) dataType).innerTypes();
+            for (Map.Entry<String, DataType> entry : innerTypes.entrySet()) {
+                List<String> subPath = new ArrayList<>(path);
+                subPath.add(entry.getKey());
+                ColumnIdent ci = new ColumnIdent(rootName, subPath);
+                outputs.add(getField(ci));
+                allocatePossibleObjectInnerFields(ci.name(), ci.path(), entry.getValue());
+            }
+        }
+    }
+
     @Override
     public List<Field> fields() {
         if (outputs == null) {
@@ -136,6 +150,7 @@ public abstract class AbstractTableRelation<T extends TableInfo> implements Anal
                 }
                 ColumnIdent columnIdent = reference.column();
                 outputs.add(getField(columnIdent));
+                allocatePossibleObjectInnerFields(reference.column().name(), reference.column().path(), reference.valueType());
             }
         }
         return outputs;

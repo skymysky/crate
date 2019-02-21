@@ -25,6 +25,7 @@ import io.crate.test.integration.CrateUnitTest;
 import io.crate.types.ArrayType;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
+import io.crate.types.ObjectType;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
 import org.elasticsearch.common.io.stream.StreamInput;
@@ -100,7 +101,7 @@ public class DataTypeTest extends CrateUnitTest {
 
         List<Object> objects = Arrays.<Object>asList(objA, objB);
         DataType dataType = DataTypes.guessType(objects);
-        assertEquals(dataType, new ArrayType(DataTypes.OBJECT));
+        assertEquals(dataType, new ArrayType(new ObjectType()));
     }
 
     @Test

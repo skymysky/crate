@@ -30,18 +30,72 @@ import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ObjectType extends DataType<Map<String, Object>> implements Streamer<Map<String, Object>> {
 
     public static final ObjectType INSTANCE = new ObjectType();
     public static final int ID = 12;
+    public static final String NAME = "object";
 
-    private ObjectType() {
+    public static class Builder {
+
+        LinkedHashMap<String, DataType> innerTypes = new LinkedHashMap<>();
+
+        public Builder setInnerType(String key, DataType innerType) {
+            innerTypes.put(key, innerType);
+            return this;
+        }
+
+        public ObjectType build() {
+            return new ObjectType(innerTypes);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    @Nullable
+    private Map<String, DataType> innerTypes;
+
+    /**
+     * Constructor used for the {@link org.elasticsearch.common.io.stream.Streamable}
+     * interface which initializes the fields after object creation.
+     */
+    public ObjectType() {
+    }
+
+    private ObjectType(@Nullable Map<String, DataType> innerTypes) {
+        this.innerTypes = innerTypes;
+    }
+
+    public Map<String, DataType> innerTypes() {
+        return innerTypes;
+    }
+
+    public DataType resolveInnerType(List<String> path) {
+        DataType innerType = this;
+        for (String el : path) {
+            if (innerType.id() == ID) {
+                Map<String, DataType> innerTypes = ((ObjectType) innerType).innerTypes;
+                if (innerTypes == null) {
+                    return UndefinedType.INSTANCE;
+                }
+                innerType = innerTypes.get(el);
+                if (innerType == null) {
+                    return UndefinedType.INSTANCE;
+                }
+            }
+        }
+        return innerType;
     }
 
     @Override
@@ -56,7 +110,7 @@ public class ObjectType extends DataType<Map<String, Object>> implements Streame
 
     @Override
     public String getName() {
-        return "object";
+        return NAME;
     }
 
     @Override
@@ -125,11 +179,67 @@ public class ObjectType extends DataType<Map<String, Object>> implements Streame
     @Override
     @SuppressWarnings("unchecked")
     public Map<String, Object> readValueFrom(StreamInput in) throws IOException {
-        return (Map<String, Object>) in.readGenericValue();
+        if (innerTypes == null) {
+            return (Map<String, Object>) in.readGenericValue();
+        } else {
+            int size = in.readVInt();
+            HashMap<String, Object> m = new HashMap<>(size);
+            for (int i = 0; i < size; i++) {
+                String key = in.readString();
+
+                DataType innerType = innerTypes.get(key);
+                assert innerType != null : "Cannot find inner-type definition for key " + key;
+
+                Object val = innerType.streamer().readValueFrom(in);
+                m.put(key, val);
+            }
+            return m;
+        }
     }
 
     @Override
     public void writeValueTo(StreamOutput out, Map<String, Object> v) throws IOException {
-        out.writeGenericValue(v);
+        if (innerTypes == null) {
+            out.writeGenericValue(v);
+        } else {
+            out.writeVInt(v.size());
+            for (Map.Entry<String, Object> entry : v.entrySet()) {
+                String key = entry.getKey();
+                out.writeString(key);
+
+                DataType innerType = innerTypes.get(key);
+                assert innerType != null : "Cannot find inner-type definition for key " + key;
+
+                innerType.streamer().writeValueTo(out, entry.getValue());
+            }
+        }
+    }
+
+
+    @Override
+    public void readFrom(StreamInput in) throws IOException {
+        if (in.readBoolean()) {
+            int typesSize = in.readVInt();
+            innerTypes = new LinkedHashMap<>(typesSize);
+            for (int i = 0; i < typesSize; i++) {
+                String key = in.readString();
+                DataType type = DataTypes.fromStream(in);
+                innerTypes.put(key, type);
+            }
+        }
+    }
+
+    @Override
+    public void writeTo(StreamOutput out) throws IOException {
+        if (innerTypes == null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            out.writeVInt(innerTypes.size());
+            for (Map.Entry<String, DataType> entry : innerTypes.entrySet()) {
+                out.writeString(entry.getKey());
+                DataTypes.toStream(entry.getValue(), out);
+            }
+        }
     }
 }

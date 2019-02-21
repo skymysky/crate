@@ -35,6 +35,7 @@ import io.crate.metadata.sys.ClassifiedMetrics.Metrics;
 import io.crate.metadata.table.ColumnRegistrar;
 import io.crate.metadata.table.StaticTableInfo;
 import io.crate.types.DataTypes;
+import io.crate.types.ObjectType;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 
@@ -91,7 +92,10 @@ public class SysMetricsTableInfo extends StaticTableInfo {
                 .register(Columns.NODE, DataTypes.OBJECT)
                 .register(Columns.NODE_ID, DataTypes.STRING)
                 .register(Columns.NODE_NAME, DataTypes.STRING)
-                .register(Columns.CLASS, DataTypes.OBJECT)
+                .register(Columns.CLASS, ObjectType.builder()
+                    .setInnerType(Columns.CLASS_TYPE.name(), DataTypes.STRING)
+                    .setInnerType(Columns.CLASS_LABELS.name(), DataTypes.STRING_ARRAY)
+                    .build())
                 .register(Columns.CLASS_TYPE, DataTypes.STRING)
                 .register(Columns.CLASS_LABELS, DataTypes.STRING_ARRAY),
             Collections.emptyList()

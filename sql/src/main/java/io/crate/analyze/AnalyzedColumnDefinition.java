@@ -33,6 +33,7 @@ import io.crate.sql.tree.Expression;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
 import io.crate.types.GeoShapeType;
+import io.crate.types.ObjectType;
 import io.crate.types.StringType;
 import io.crate.types.TimestampType;
 import org.elasticsearch.common.settings.Settings;
@@ -223,12 +224,12 @@ public class AnalyzedColumnDefinition {
         if ("array".equals(collectionType)) {
             Map<String, Object> outerMapping = new HashMap<>();
             outerMapping.put("type", "array");
-            if (dataType().equals(DataTypes.OBJECT)) {
+            if (dataType().id() == ObjectType.ID) {
                 objectMapping(mapping);
             }
             outerMapping.put("inner", mapping);
             return outerMapping;
-        } else if (dataType().equals(DataTypes.OBJECT)) {
+        } else if (dataType().id() == ObjectType.ID) {
             objectMapping(mapping);
         }
 

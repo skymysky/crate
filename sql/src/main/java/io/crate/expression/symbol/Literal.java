@@ -29,6 +29,7 @@ import io.crate.types.ArrayType;
 import io.crate.types.CollectionType;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
+import io.crate.types.ObjectType;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -217,7 +218,7 @@ public class Literal<ReturnType> extends Symbol implements Input<ReturnType>, Co
     }
 
     public static Literal<Map<String, Object>> of(Map<String, Object> value) {
-        return new Literal<>(DataTypes.OBJECT, value);
+        return new Literal<>(new ObjectType(), value);
     }
 
     public static Literal<Object[]> of(Object[] value, DataType dataType) {
