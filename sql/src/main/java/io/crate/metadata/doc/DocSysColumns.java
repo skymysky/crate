@@ -45,6 +45,7 @@ public class DocSysColumns {
         public static final String SCORE = "_score";
         public static final String UID = "_uid";
         public static final String DOC = "_doc";
+        public static final String DOCID = "_docid";
         public static final String RAW = "_raw";
 
         /**
@@ -65,6 +66,7 @@ public class DocSysColumns {
      * See {@link Names#FETCHID}
      */
     public static final ColumnIdent FETCHID = new ColumnIdent(Names.FETCHID);
+    public static final ColumnIdent DOCID = new ColumnIdent(Names.DOCID);
 
     public static final ImmutableMap<ColumnIdent, DataType> COLUMN_IDENTS = ImmutableMap.<ColumnIdent, DataType>builder()
         .put(ID, DataTypes.STRING)
@@ -74,6 +76,7 @@ public class DocSysColumns {
         .put(DOC, DataTypes.OBJECT)
         .put(RAW, DataTypes.STRING)
         .put(FETCHID, DataTypes.LONG)
+        .put(DOCID, DataTypes.INTEGER)
         .build();
 
     private static final ImmutableMap<ColumnIdent, String> LUCENE_COLUMN_NAMES = ImmutableMap.<ColumnIdent, String>builder()
