@@ -108,6 +108,7 @@ Changes
 
 Fixes
 =====
+<<<<<<< HEAD
 
 - Fixed an issue that caused the Admin UI monitoring graphs to be cut off.
 
@@ -131,3 +132,5 @@ Fixes
   partitioned column is generated and based on the child of an object to fail.
 
 - Fixed an issue that caused the Basic Authentication prompt to fail in Safari.
+=======
+>>>>>>> e062da8b13... Reflect 3.2.4 release
